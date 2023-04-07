@@ -11,20 +11,28 @@ import matplotlib.pyplot as plt  # for making figures
 class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
-        self.embedding = nn.Embedding(27, 10)
-        self.fc1 = nn.Linear(30, 500)
-        self.fc2 = nn.Linear(500, 27)
+        self.embedding = nn.Embedding(vocab, input_mlp)
+        self.fc1 = nn.Linear(input_mlp * 3, hidden)
+        self.fc2 = nn.Linear(hidden, vocab)
+        self.batch_norm1 = nn.BatchNorm1d(hidden)
+        self.batch_norm2 = nn.BatchNorm1d(vocab)
 
     def forward(self, x):
         out = self.embedding(x)
         out = torch.flatten(out, start_dim=1)
         out = self.fc1(out)
+        out = self.batch_norm1(out)
         out = F.tanh(out)
         out = self.fc2(out)
+        out = self.batch_norm2(out)
         return out
 
 
 start_time = datetime.datetime.now()
+
+input_mlp = 10
+hidden = 500
+vocab = 27
 
 # read in all the words
 words = open('name.txt', 'r').read().splitlines()
@@ -98,7 +106,7 @@ for i in range(200000):
 # plt.ylabel("Log Loss")
 # plt.show()
 
-print('<-----------------MLP----------------->')
+print('<-----------------MLP with normalization----------------->')
 
 logits = mlp(Xtr)
 loss = F.cross_entropy(logits, Ytr)
@@ -115,5 +123,4 @@ print(f'te: {loss}')
 end_time = datetime.datetime.now()
 
 print(f'time: {end_time - start_time}')
-
-print('<--------------------------------------->')
+print('<-------------------------------------------------------->')
